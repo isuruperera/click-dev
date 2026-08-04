@@ -1,0 +1,20 @@
+[project]
+name = "click-example-invoice"
+version = "1.0.0"
+description = "Click invoice API example"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "fastapi>=0.116",
+    "uvicorn>=0.35",
+]
+
+[project.scripts]
+invoice-api = "invoice:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "invoice"

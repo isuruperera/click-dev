@@ -1,0 +1,12 @@
+$ invoice-api
+
+  invoice-api runs a small HTTP service for listing and retrieving invoices.
+
+Usage:
+
+  $ pip install --editable .
+  $ invoice-api --port 8000
+  $ curl -H 'Authorization: Bearer demo-alice-token' \
+      http://127.0.0.1:8000/api/invoices
+  $ curl -H 'Authorization: Bearer demo-alice-token' \
+      http://127.0.0.1:8000/api/invoices/1001
