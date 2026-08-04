@@ -528,7 +528,7 @@ else:
         return getattr(sys.stdin, "encoding", None) or sys.getfilesystemencoding()
 
     def _get_windows_console_stream(
-        f: t.TextIO, encoding: str | None, errors: str | None
+        _f: t.TextIO, _encoding: str | None, _errors: str | None
     ) -> t.TextIO | None:
         return None
 
