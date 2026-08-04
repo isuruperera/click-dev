@@ -484,9 +484,7 @@ def test_sys_streams_restored_after_exception():
 # Category 6: Stress tests - high-iteration reproducers for race conditions
 #
 # These are marked with ``pytest.mark.stress`` so they can be included or
-# excluded independently. The ``tox -e stress`` env collects every
-# ``pytest.mark.stress`` test across the suite (not just this file), so
-# stress regressions for other components live alongside their unit tests.
+# excluded independently. The CI workflow runs them in a separate job.
 # ---------------------------------------------------------------------------
 
 

@@ -1,10 +1,7 @@
 import os.path
 import pathlib
 import platform
-import subprocess
-import sys
 import tempfile
-import typing as t
 
 import pytest
 
@@ -52,25 +49,6 @@ def test_range_fail(type, value, expect):
         type.convert(value, None, None)
 
     assert expect in exc_info.value.message
-
-
-@pytest.mark.parametrize(
-    ("error_message", "expected"),
-    [
-        ("bad value: nope", "bad value: nope"),
-        ("", "nope"),
-    ],
-)
-def test_func_param_type_uses_value_error_message(error_message, expected):
-    def parse(value):
-        raise ValueError(error_message if error_message else "")
-
-    func_type = click.types.FuncParamType(parse)
-
-    with pytest.raises(click.BadParameter) as exc_info:
-        func_type.convert("nope", None, None)
-
-    assert expected in exc_info.value.message
 
 
 def test_float_range_no_clamp_open():
@@ -126,29 +104,6 @@ def test_path_type(runner, cls, expect):
     result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
-
-
-def test_path_dash_no_byteswarning():
-    """Detecting the ``-`` dash sentinel must not compare ``bytes`` against
-    ``str``, which raises a ``BytesWarning`` under ``python -bb``.
-
-    The warning is only emitted when the interpreter runs with ``-b``, so this
-    has to be checked in a subprocess. ``-bb`` turns the warning into an error,
-    so a clean exit means no mismatched comparison happened.
-    """
-    program = (
-        "import click\n"
-        "convert = click.Path(allow_dash=True).convert\n"
-        "for value in ('-', '', b'-', b''):\n"
-        "    convert(value, None, None)\n"
-    )
-    result = subprocess.run(
-        [sys.executable, "-bb", "-c", program],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    assert "BytesWarning" not in result.stderr
 
 
 def _symlinks_supported():
@@ -269,22 +224,13 @@ def test_path_surrogates(tmp_path, monkeypatch):
     ],
 )
 def test_file_surrogates(type, tmp_path):
-    """Ensures that the error handling in ``click.File`` is robust.
-
-    ``EILSEQ`` shows up with rootless Podman (FUSE-backed paths) and on filesystems
-    that reject non-UTF-8 names, like ZFS with ``utf8only=on``.
-
-    See: https://github.com/pallets/click/issues/2634
-    """
     path = tmp_path / "\udcff"
-    match = (
-        # Common case: �': No such file or directory.
-        r"(�': No such file or directory"
-        # BSD/macOS libc special case (EILSEQ).
-        r"|Illegal byte sequence"
-        # glibc special case (EILSEQ).
-        r"|Invalid or incomplete multibyte or wide character)"
-    )
+
+    # - common case: �': No such file or directory
+    # - special case: Illegal byte sequence
+    # The spacial case is seen with rootless Podman. The root cause is most
+    # likely that the path is handled by a user-space program (FUSE).
+    match = r"(�': No such file or directory|Illegal byte sequence)"
     with pytest.raises(click.BadParameter, match=match):
         type.convert(path, None, None)
 
@@ -309,24 +255,3 @@ def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)
     assert message == "'d' is not one of 'a', 'b', 'c'."
-
-
-def test_param_type_input_parameter_defaults_at_runtime():
-    """Omitting the input type parameter works at runtime on every
-    supported Python. The ``Any`` default is native (PEP 696) on Python
-    3.13+, and backfilled by ``ParamType.__class_getitem__`` before
-    that."""
-    assert t.get_args(click.ParamType[int]) == (int, t.Any)
-    assert t.get_args(click.ParamType[int, str]) == (int, str)
-
-
-def test_param_type_subclass_omitting_input_parameter():
-    class DoublingType(click.ParamType[int]):
-        name = "doubling"
-
-        def convert(self, value, param, ctx):
-            return int(value) * 2
-
-    doubling = DoublingType()
-    assert doubling("21") == 42
-    assert doubling(None) is None

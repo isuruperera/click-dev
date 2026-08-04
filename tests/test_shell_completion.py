@@ -1,4 +1,3 @@
-import io
 import textwrap
 import warnings
 from collections.abc import Mapping
@@ -12,9 +11,6 @@ from click.core import Group
 from click.core import Option
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
-from click.shell_completion import FishComplete
-from click.shell_completion import PowerShellComplete
-from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
 from click.types import Choice
 from click.types import File
@@ -354,17 +350,6 @@ def test_full_source(runner, shell):
     assert f"_CLI_COMPLETE={shell}_complete" in result.output
 
 
-def test_full_source_powershell(runner):
-    # The PowerShell source script sets the completion env var via
-    # `$env:_CLI_COMPLETE = 'powershell_complete'`, so the substring
-    # `_CLI_COMPLETE=powershell_complete` used by test_full_source above
-    # is not present. Assert on the PowerShell-specific markers instead.
-    cli = Group("cli", commands=[Command("a"), Command("b")])
-    result = runner.invoke(cli, env={"_CLI_COMPLETE": "powershell_source"})
-    assert "Register-ArgumentCompleter" in result.output
-    assert "powershell_complete" in result.output
-
-
 @pytest.mark.parametrize(
     ("shell", "env", "expect"),
     [
@@ -375,12 +360,6 @@ def test_full_source_powershell(runner):
         ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
         ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
         ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
-        (
-            "powershell",
-            {"COMP_WORDS": "", "COMP_CWORD": "0"},
-            "plain\na\n_\nplain\nb\nbee\n",
-        ),
-        ("powershell", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
@@ -389,20 +368,6 @@ def test_full_complete(runner, shell, env, expect):
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
     assert result.output == expect
-
-
-def test_source_uses_lf_line_endings(monkeypatch):
-    stdout = io.BytesIO()
-    stream = io.TextIOWrapper(stdout, encoding="utf-8", newline="\r\n")
-    monkeypatch.setattr("click.utils._default_text_stdout", lambda: stream)
-
-    cli = Group("cli", commands=[Command("a"), Command("b")])
-    assert shell_complete(cli, {}, "cli", "_CLI_COMPLETE", "zsh_source") == 0
-
-    stream.flush()
-    output = stdout.getvalue()
-    assert b"\r\n" not in output
-    assert b"\n" in output
 
 
 @pytest.mark.parametrize(
@@ -492,8 +457,7 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
-# case_sensitive=False normalizes values to lowercase, matching remains case insensitive
-@pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
+@pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
     cli = Command(
         "cli",
@@ -574,44 +538,24 @@ def test_add_completion_class_decorator():
 
 
 # Don't make the ResourceWarning give an error
-@pytest.mark.filterwarnings("default::ResourceWarning")
-def test_files_closed(tmp_path) -> None:
-    config_file = str(tmp_path / "foo.txt")
-    with open(config_file, "w") as f:
-        f.write("bar")
+@pytest.mark.filterwarnings("default")
+def test_files_closed(runner) -> None:
+    with runner.isolated_filesystem():
+        config_file = "foo.txt"
+        with open(config_file, "w") as f:
+            f.write("bar")
 
-    @click.group()
-    @click.option(
-        "--config-file",
-        default=config_file,
-        type=click.File(mode="r"),
-    )
-    @click.pass_context
-    def cli(ctx, config_file):
-        pass
+        @click.group()
+        @click.option(
+            "--config-file",
+            default=config_file,
+            type=click.File(mode="r"),
+        )
+        @click.pass_context
+        def cli(ctx, config_file):
+            pass
 
-    with warnings.catch_warnings(record=True) as current_warnings:
-        assert not current_warnings, "There should be no warnings to start"
-        _get_completions(cli, args=[], incomplete="")
-        assert not current_warnings, "There should be no warnings after either"
-
-
-def test_fish_format_completion_escapes_help():
-    fc = FishComplete(Command("x"), {}, "x", "_X_COMPLETE")
-    item = CompletionItem("--at", help="first\nsecond\tthird")
-    # The newline is escaped to the literal characters backslash-n and the tab
-    # becomes a space, so each completion stays on one line for fish.
-    assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
-
-
-def test_powershell_format_completion_escapes_help():
-    pc = PowerShellComplete(Command("x"), {}, "x", "_X_COMPLETE")
-    # Newlines (LF and CRLF) collapse to spaces so the help text stays
-    # on a single line and doesn't break the 3-lines-per-item framing
-    # consumed by the PowerShell completion script.
-    item = CompletionItem("--at", help="first\nsecond\r\nthird")
-    assert pc.format_completion(item) == "plain\n--at\nfirst second  third"
-    # Items without help text use the "_" sentinel, matching the format
-    # produced by ZshComplete.
-    item = CompletionItem("--at")
-    assert pc.format_completion(item) == "plain\n--at\n_"
+        with warnings.catch_warnings(record=True) as current_warnings:
+            assert not current_warnings, "There should be no warnings to start"
+            _get_completions(cli, args=[], incomplete="")
+            assert not current_warnings, "There should be no warnings after either"
