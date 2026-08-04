@@ -414,7 +414,7 @@ def open_stream(
     # functionality to wrap it in a Python file.  Then we wrap it in an
     # atomic file that moves the file over on close.
     import errno
-    import random
+    import secrets
 
     try:
         perm: int | None = os.stat(filename).st_mode
@@ -429,7 +429,7 @@ def open_stream(
     while True:
         tmp_filename = os.path.join(
             os.path.dirname(filename),
-            f".__atomic-write{random.randrange(1 << 32):08x}",
+            f".__atomic-write{secrets.randbelow(1 << 32):08x}",
         )
         try:
             fd = os.open(tmp_filename, flags, 0o666 if perm is None else perm)
@@ -530,6 +530,7 @@ else:
     def _get_windows_console_stream(
         f: t.TextIO, encoding: str | None, errors: str | None
     ) -> t.TextIO | None:
+        del f, encoding, errors
         return None
 
 
