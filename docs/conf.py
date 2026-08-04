@@ -47,11 +47,12 @@ html_context = {
         ProjectLink("Chat", "https://discord.gg/pallets"),
     ]
 }
+_LOCALTOC = "localtoc.html"
 html_sidebars = {
-    "index": ["project.html", "localtoc.html", "searchbox.html", "ethicalads.html"],
-    "**": ["localtoc.html", "relations.html", "searchbox.html", "ethicalads.html"],
+    "index": ["project.html", _LOCALTOC, "searchbox.html", "ethicalads.html"],
+    "**": [_LOCALTOC, "relations.html", "searchbox.html", "ethicalads.html"],
 }
-singlehtml_sidebars = {"index": ["project.html", "localtoc.html", "ethicalads.html"]}
+singlehtml_sidebars = {"index": ["project.html", _LOCALTOC, "ethicalads.html"]}
 html_static_path = ["_static"]
 html_favicon = "_static/click-icon.svg"
 html_logo = "_static/click-logo.svg"
