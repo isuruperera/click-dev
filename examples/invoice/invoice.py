@@ -86,7 +86,10 @@ def list_invoices(
     ]
 
 
-@app.get("/api/invoices/{invoice_id}")
+@app.get(
+    "/api/invoices/{invoice_id}",
+    responses={404: {"description": "Invoice not found"}},
+)
 def get_invoice(
     invoice_id: int,
     customer: Annotated[Customer, Depends(current_customer)],
