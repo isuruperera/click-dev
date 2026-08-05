@@ -33,7 +33,7 @@ def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
-def safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
+def _safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
     """Wraps a function so that it swallows exceptions."""
 
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | None:
@@ -56,7 +56,7 @@ def make_str(value: t.Any) -> str:
     return str(value)
 
 
-def make_default_short_help(help: str, max_length: int = 45) -> str:
+def _make_default_short_help(help: str, max_length: int = 45) -> str:
     """Returns a condensed version of help string."""
     # Consider only the first paragraph.
     paragraph_end = help.find("\n\n")
@@ -106,7 +106,7 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
-class LazyFile:
+class _LazyFile:
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
@@ -178,7 +178,7 @@ class LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> LazyFile:
+    def __enter__(self) -> _LazyFile:
         return self
 
     def __exit__(
@@ -194,14 +194,14 @@ class LazyFile:
         return iter(self._f)  # type: ignore
 
 
-class KeepOpenFile:
+class _KeepOpenFile:
     def __init__(self, file: t.IO[t.Any]) -> None:
         self._file: t.IO[t.Any] = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> KeepOpenFile:
+    def __enter__(self) -> _KeepOpenFile:
         return self
 
     def __exit__(
@@ -322,7 +322,7 @@ def echo(
     file.flush()
 
 
-def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
+def _get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
     """Returns a system stream for byte processing.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
@@ -334,7 +334,7 @@ def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryI
     return opener()
 
 
-def get_text_stream(
+def _get_text_stream(
     name: t.Literal["stdin", "stdout", "stderr"],
     encoding: str | None = None,
     errors: str | None = "strict",
@@ -393,13 +393,13 @@ def open_file(
     """
     if lazy:
         return t.cast(
-            "t.IO[t.Any]", LazyFile(filename, mode, encoding, errors, atomic=atomic)
+            "t.IO[t.Any]", _LazyFile(filename, mode, encoding, errors, atomic=atomic)
         )
 
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
 
     if not should_close:
-        f = t.cast("t.IO[t.Any]", KeepOpenFile(f))
+        f = t.cast("t.IO[t.Any]", _KeepOpenFile(f))
 
     return f
 
@@ -495,7 +495,7 @@ def get_app_dir(app_name: str, roaming: bool = True, force_posix: bool = False) 
     )
 
 
-class PacifyFlushWrapper:
+class _PacifyFlushWrapper:
     """This wrapper is used to catch and suppress BrokenPipeErrors resulting
     from ``.flush()`` being called on broken pipe during the shutdown/final-GC
     of the Python interpreter. Notably ``.flush()`` is always called on
@@ -625,3 +625,27 @@ def _expand_args(
             out.extend(matches)
 
     return out
+
+
+def __getattr__(name: str) -> object:
+    import warnings
+
+    _deprecated = {
+        "get_binary_stream": _get_binary_stream,
+        "get_text_stream": _get_text_stream,
+        "LazyFile": _LazyFile,
+        "KeepOpenFile": _KeepOpenFile,
+        "make_default_short_help": _make_default_short_help,
+        "PacifyFlushWrapper": _PacifyFlushWrapper,
+        "safecall": _safecall,
+    }
+
+    if name in _deprecated:
+        warnings.warn(
+            f"'{name}' is deprecated and will be removed in Click 9.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _deprecated[name]
+
+    raise AttributeError(name)
