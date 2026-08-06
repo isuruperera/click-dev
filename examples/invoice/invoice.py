@@ -92,7 +92,7 @@ def get_invoice(
     customer: Annotated[Customer, Depends(current_customer)],
 ) -> dict[str, object]:
     invoice = INVOICES.get(invoice_id)
-    if invoice is None:
+    if invoice is None or invoice.customer_id != customer.id:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     return asdict(invoice)
