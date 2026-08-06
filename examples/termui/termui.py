@@ -39,7 +39,7 @@ def progress(count):
     """Demonstrates the progress bar."""
     items = range(count)
 
-    def process_slowly(item):
+    def process_slowly(_):
         time.sleep(0.002 * random.random())
 
     def filter(items):
