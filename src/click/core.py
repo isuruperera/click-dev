@@ -1066,7 +1066,7 @@ class Command:
 
         # Cache the help option object in private _help_option attribute to
         # avoid creating it multiple times. Not doing this will break the
-        # callback odering by iter_params_for_processing(), which relies on
+        # callback ordering by iter_params_for_processing(), which relies on
         # object comparison.
         if self._help_option is None:
             # Avoid circular import.
@@ -2819,7 +2819,7 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # The alignement of default to the flag_value is resolved lazily in
+        # The alignment of default to the flag_value is resolved lazily in
         # get_default() to prevent callable flag_values (like classes) from
         # being instantiated. Refs:
         # https://github.com/pallets/click/issues/3121

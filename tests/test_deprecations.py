@@ -13,10 +13,10 @@ import click.utils
     ("module", "name", "target"),
     [
         # Stream helpers, re-exported from both `click` and `click.utils`.
-        (click, "get_binary_stream", click.utils._get_binary_stream),
-        (click, "get_text_stream", click.utils._get_text_stream),
-        (click.utils, "get_binary_stream", click.utils._get_binary_stream),
-        (click.utils, "get_text_stream", click.utils._get_text_stream),
+        (click, "get_binary_stream", click.get_binary_stream),
+        (click, "get_text_stream", click.get_text_stream),
+        (click.utils, "get_binary_stream", click.get_binary_stream),
+        (click.utils, "get_text_stream", click.get_text_stream),
         # Command-class aliases, re-exported from `click` and `click.core`.
         (click, "BaseCommand", click.core._BaseCommand),
         (click, "MultiCommand", click.core._MultiCommand),
