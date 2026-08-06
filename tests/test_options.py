@@ -520,7 +520,7 @@ def test_boolean_flag_envvar(runner, envvar_name, envvar_value, expected):
     "value",
     (
         # Extra spaces inside the value.
-        "tru e",
+        "tr ue",
         "fa lse",
         # Numbers.
         "10",

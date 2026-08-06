@@ -1,13 +1,3 @@
-from tests.test_utils.test_KeepOpenFile import *
-from tests.test_utils.test_LazyFile import *
-from tests.test_utils.test__detect_program_name import *
-from tests.test_utils.test__expand_args import *
-from tests.test_utils.test_confirm import *
-from tests.test_utils.test_echo import *
-from tests.test_utils.test_echo_via_pager import *
-from tests.test_utils.test_format_filename import *
-from tests.test_utils.test_make_default_short_help import *
-from tests.test_utils.test_open_file import *
-from tests.test_utils.test_prompt import *
-from tests.test_utils.test_sentinel import *
-from tests.test_utils.test_style import *
+"""Pytest entrypoint for the split test_utils modules."""
+
+collect_ignore = ["test_utils"]
