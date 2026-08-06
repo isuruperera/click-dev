@@ -32,12 +32,6 @@ import click.utils
         (click.parser, "normalize_opt", click.parser._normalize_opt),
         (click.parser, "ParsingState", click.parser._ParsingState),
         (click.parser, "split_arg_string", click.shell_completion.split_arg_string),
-        # Deprecated `click.utils` utilities.
-        (click.utils, "LazyFile", click.utils._LazyFile),
-        (click.utils, "KeepOpenFile", click.utils._KeepOpenFile),
-        (click.utils, "make_default_short_help", click.utils._make_default_short_help),
-        (click.utils, "PacifyFlushWrapper", click.utils._PacifyFlushWrapper),
-        (click.utils, "safecall", click.utils._safecall),
         # Version metadata attribute.
         (click, "__version__", importlib.metadata.version("click")),
     ],
