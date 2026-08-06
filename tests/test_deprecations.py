@@ -12,11 +12,11 @@ import click.utils
 @pytest.mark.parametrize(
     ("module", "name", "target"),
     [
-        # Stream helpers, re-exported from both `click` and `click.utils`.
-        (click, "get_binary_stream", click.utils._get_binary_stream),
-        (click, "get_text_stream", click.utils._get_text_stream),
-        (click.utils, "get_binary_stream", click.utils._get_binary_stream),
-        (click.utils, "get_text_stream", click.utils._get_text_stream),
+        # Stream helpers.
+        (click, "get_binary_stream", click.get_binary_stream),
+        (click, "get_text_stream", click.get_text_stream),
+        (click.utils, "get_binary_stream", click.utils.get_binary_stream),
+        (click.utils, "get_text_stream", click.utils.get_text_stream),
         # Command-class aliases, re-exported from `click` and `click.core`.
         (click, "BaseCommand", click.core._BaseCommand),
         (click, "MultiCommand", click.core._MultiCommand),
@@ -32,12 +32,6 @@ import click.utils
         (click.parser, "normalize_opt", click.parser._normalize_opt),
         (click.parser, "ParsingState", click.parser._ParsingState),
         (click.parser, "split_arg_string", click.shell_completion.split_arg_string),
-        # Deprecated `click.utils` utilities.
-        (click.utils, "LazyFile", click.utils._LazyFile),
-        (click.utils, "KeepOpenFile", click.utils._KeepOpenFile),
-        (click.utils, "make_default_short_help", click.utils._make_default_short_help),
-        (click.utils, "PacifyFlushWrapper", click.utils._PacifyFlushWrapper),
-        (click.utils, "safecall", click.utils._safecall),
         # Version metadata attribute.
         (click, "__version__", importlib.metadata.version("click")),
     ],

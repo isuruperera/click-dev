@@ -273,7 +273,7 @@ def test_lookup_default_override_respected(runner):
     ``None``.
 
     Previous attempts in https://github.com/pallets/click/pr/3199 were entirely
-    bypassing the user's overridded method.
+    bypassing the user's overridden method.
     """
 
     class CustomContext(click.Context):
